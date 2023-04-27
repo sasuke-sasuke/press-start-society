@@ -1,11 +1,16 @@
+const Game = require('./models/game');
+
 const express = require('express');
+const cors = require('cors');
 
 const { NotFoundError } = require('./expressError')
 
-
+const morgan = require('morgan')
 const app = express();
 
+app.use(cors())
 app.use(express.json());
+app.use(morgan('tiny'))
 
 /** Handle 404 error -- this matches everything */
 app.use((req, res, next) => {
