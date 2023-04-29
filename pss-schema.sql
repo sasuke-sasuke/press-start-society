@@ -40,7 +40,7 @@ CREATE TABLE reviews (
         CHECK (rating >= 1.0 AND rating <= 5.0),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id INTEGER NOT NULL
-        REFERENCES users(id),
+        REFERENCES users(id) ON DELETE CASCADE,
     game_id INTEGER NOT NULL
         REFERENCES games(id) ON DELETE CASCADE
 );
@@ -74,9 +74,9 @@ CREATE TABLE comments (
     content VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id INTEGER NOT NULL
-        REFERENCES users(id),
+        REFERENCES users(id) ON DELETE CASCADE,
     post_id INTEGER NOT NULL
-        REFERENCES posts(id)
+        REFERENCES posts(id) ON DELETE CASCADE
 );
 
 CREATE TABLE groups (
@@ -88,7 +88,7 @@ CREATE TABLE groups (
     game_id INTEGER NOT NULL
         REFERENCES games(id),
     owner_id INTEGER NOT NULL
-        REFERENCES users(id)
+        REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE group_users (
@@ -96,5 +96,5 @@ CREATE TABLE group_users (
     group_id INTEGER NOT NULL
         REFERENCES groups(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL
-        REFERENCES users(id) ON DELETE CASCADE
+        REFERENCES users(id)
 );
