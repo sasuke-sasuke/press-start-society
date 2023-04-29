@@ -124,18 +124,24 @@ class User {
 
 }
 
-const test = async () => {
-    const res = await User.register(
-        username = "sasuke",
-        password = "myeye123",
-        firstName = "Sasuke",
-        lastName = "Uchiha",
-        email = "sasuke@email.com"
-    )
-    console.log(res)
-}
+// DELETE vvvvvvvv
 
-test();
-debugger;
+// const test = async () => {
+//     const res = await User.register(
+//         "sasuke",
+//         "myeye123",
+//         "Sasuke",
+//         "Uchiha",
+//         "sasuke@email.com"
+//     )
+//     const res = await User.remove("johndoe");
+//     const res = await User.login("sasuke", "myeye123");
+//     console.log(res);
+// }
+
+// test();
+// debugger;
+
+// DELETE ^^^^^^^^
 
 module.exports = User;

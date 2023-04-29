@@ -1,4 +1,5 @@
 const Game = require('./models/game');
+const User = require('./models/user');
 
 const express = require('express');
 const cors = require('cors');
