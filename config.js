@@ -17,6 +17,9 @@ function getDatabaseUri() {
         : process.env.DATABASE_URL || "press_start_society";
 }
 
+// Speeds up work factor for testing
+const BCRYPT_WORK_FACTOR = process.env.NODE_ENV === "test" ? 1: 12;
+
 module.exports = {
     API_BASE_URL,
     getDatabaseUri,
