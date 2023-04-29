@@ -4,7 +4,7 @@ const db = require("../db");
 const bcrypt = require("bcrypt");
 const {BCRYPT_WORK_FACTOR} = require("../config");
 const {sqlForPartialUpdate} = require("../helpers/sql")
-const {NotFoundError, BadRequest, UnauthorizedError} = require("../expressError")
+const {NotFoundError, BadRequestError, UnauthorizedError} = require("../expressError")
 
 class User {
 

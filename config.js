@@ -24,5 +24,6 @@ module.exports = {
     API_BASE_URL,
     getDatabaseUri,
     SECRET_KEY,
-    PORT
+    PORT,
+    BCRYPT_WORK_FACTOR
 }
