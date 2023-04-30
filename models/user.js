@@ -20,7 +20,7 @@ class User {
         status = '',
         created_at = null,
         last_login = null,
-        follows = [],
+        following = [],
         followers = [],
         posts = [],
         favoriteGames = []
@@ -38,12 +38,13 @@ class User {
         this.status = status;
         this.created_at = created_at;
         this.last_login = last_login;
-        this.follows = follows;
+        this.following = following;
         this.followers = followers;
         this.posts = posts;
         this.favoriteGames = favoriteGames;
     }
 
+    /** Gets all info related to user */
     static async get(username) {
         const res = await db.query(
             `SELECT *
@@ -56,7 +57,12 @@ class User {
 
         if(!userRow) throw new NotFoundError(`User ${username} not found`);
 
-        return new User(userRow);
+        const user = new User(userRow);
+        user.getFavGames();
+        user.getFollowing();
+        user.getFollowers();
+        
+        return user;
     }
 
 
@@ -110,7 +116,7 @@ class User {
 
         if(!isValid) throw new UnauthorizedError(`Invalid username or password`);
 
-        const user = new User(userRow);
+        const user = await User.get(userRow.username);
 
         const lastLoginRes = await db.query(
             `UPDATE users
@@ -194,7 +200,7 @@ class User {
              [this.username],
         )
         const userFavGamesRows = res.rows;
-        this.favoriteGames = userFavGamesRows;
+        this.favoriteGames = [...userFavGamesRows];
         return this;
     }
 
@@ -224,26 +230,72 @@ class User {
         return this.getFavGames();
     }
 
-    static async getFollows(username) {
+    async getFollowing(){
+        const res = await db.query(
+            `SELECT 
+             u.id, 
+             u.username
+             FROM users u
+             JOIN user_followers uf
+             ON u.id = uf.user_id
+             WHERE uf.follower_id = $1`,
+             [this.id]
+        )
+
+        const userFollowingRows = res.rows;
+        this.following = [...userFollowingRows];
+
+        return this;
     }
 
-    static async getFollowers(username){
+    async getFollowers(){
+        const res = await db.query(
+            `SELECT
+             u.id, 
+             u.username
+             FROM users u
+             JOIN user_followers uf
+             ON u.id = uf.follower_id
+             WHERE uf.user_id = $1`,
+             [this.id]
+        )
 
+        const userFollowersRows = res.rows;
+        this.followers = [...userFollowersRows];
+
+        return this;
     }
 
     async follow(usernameToFollow){
+        const follow = await User.get(usernameToFollow);
 
+        await db.query(
+            `INSERT INTO user_followers
+            (user_id, follower_id)
+            VALUES
+            ($1, $2)`,
+            [follow.id, this.id]
+        )
+
+        return this.getFollowing();
     }
     
     async unfollow(usernameToUnfollow){
+        const unfollow = await User.get(usernameToUnfollow);
+        await db.query(
+            `DELETE FROM user_followers
+            WHERE user_id = $1 AND follower_id = $2`,
+            [unfollow.id, this.id]
+        )
 
+        return this.getFollowing();
     }
 
 }
 
 // DELETE vvvvvvvv
 
-// const test = async () => {
+const test = async () => {
     // const res = await User.register(
     //     "bob",
     //     "1234567",
@@ -256,17 +308,21 @@ class User {
     // console.log(await user.permaRemove("bob"));
     // const user = await User.login("three", "1234567");
     // console.log(await user.update({
-    //     firstName: "chrys",
-    //     about: "super cute"
+    //     status: "yolo",
+    //     about: "I like turtles"
     // }))
     // console.log(await user.getFavGames())
-    // console.log(await user.addFavGame(9));
-    // console.log(await user.removeFavGame(7));
+    // await user.addFavGame(7);
+    // await user.removeFavGame(7);
+    // console.log(await user.getFollowing());
+    // await user.follow("naruto");
+    // await user.follow("naruto");
+    // console.log(await User.get("three"))
     // console.log(res);
     // console.log(user)
-// }
+}
 
-// test();
+test();
 
 // DELETE ^^^^^^^^
 
