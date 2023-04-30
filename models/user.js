@@ -23,7 +23,7 @@ class User {
         following = [],
         followers = [],
         posts = [],
-        favoriteGames = []
+        favorite_games = []
     }) 
     {
         this.id = id;
@@ -41,7 +41,7 @@ class User {
         this.following = following;
         this.followers = followers;
         this.posts = posts;
-        this.favoriteGames = favoriteGames;
+        this.favorite_games = favorite_games;
     }
 
     /** Gets all info related to user */
@@ -58,9 +58,10 @@ class User {
         if(!userRow) throw new NotFoundError(`User ${username} not found`);
 
         const user = new User(userRow);
-        user.getFavGames();
-        user.getFollowing();
-        user.getFollowers();
+        await user.getFavGames();
+        await user.getFollowing();
+        await user.getFollowers();
+        await user.getPosts();
         
         return user;
     }
@@ -200,7 +201,7 @@ class User {
              [this.username],
         )
         const userFavGamesRows = res.rows;
-        this.favoriteGames = [...userFavGamesRows];
+        this.favorite_games = [...userFavGamesRows];
         return this;
     }
 
@@ -291,6 +292,183 @@ class User {
         return this.getFollowing();
     }
 
+    async getPosts(){
+        const res = await db.query(
+            `SELECT p.id, p.content, p.date_created
+            FROM users u
+            JOIN posts p
+            ON u.id = p.user_id
+            WHERE u.id = $1
+            ORDER BY p.date_created DESC`,
+            [this.id]
+        )
+
+        const userPostsRows = res.rows;
+        this.posts = [...userPostsRows];
+        
+        for( let post of this.posts){
+            post.likes = await this.getPostLikes(post.id);
+            post.comments = await this.getComments(post.id);
+        }
+
+        return this;
+    }
+
+    async getPost(postId){
+        const res = await db.query(
+            `SELECT id, user_id, content, date_created
+            FROM posts
+            WHERE id = $1`,
+            [postId]
+        )
+        const userPostRow = res.rows[0];
+
+        if(!userPostRow) throw new NotFoundError(`Post ${postId} not found`);
+
+        userPostRow.likes = await this.getPostLikes(userPostRow.id);
+
+        return userPostRow;
+    }
+
+    async createPost(content){
+        await db.query(
+            `INSERT INTO posts
+            (user_id, content)
+            VALUES
+            ($1, $2)`,
+            [this.id, content]
+        )
+
+        return this.getPosts();
+    }
+
+    async removePost(postId){
+        await db.query(
+            `DELETE FROM posts
+            WHERE id = $1`,
+            [postId]
+        )
+
+        return this.getPosts();
+    }
+
+    async editPost(postId, content){
+        await db.query(
+            `UPDATE posts
+            SET content = $1
+            WHERE id = $2`,
+            [content, postId]
+        )
+
+        return this.getPosts();
+    }
+
+    async getPostLikes(postId){
+        const res = await db.query(
+            `SELECT post_id, COUNT(user_id) AS likes
+            FROM post_likes
+            WHERE post_id = $1
+            GROUP BY post_id`,
+            [postId]
+        )
+        const userPostLikesRow = res.rows[0];
+
+        let likes;
+        if(!userPostLikesRow){
+            likes = 0;
+        } else {
+            likes = +userPostLikesRow.likes;
+        }
+
+        return likes;
+    }
+
+    async likePost(postId){
+        await db.query(
+            `INSERT INTO post_likes
+            (user_id, post_id)
+            VALUES
+            ($1, $2)`,
+            [this.id, postId]
+        )
+
+        return this.getPosts();
+    }
+
+    async unlikePost(postId){
+        await db.query(
+            `DELETE FROM post_likes
+            WHERE user_id = $1 AND post_id = $2`,
+            [this.id, postId]
+        )
+
+        return this.getPosts();
+    }
+
+    async getComment(commentId){
+        const res = await db.query(
+            `SELECT id, post_id, user_id, content, created_at
+            FROM comments
+            WHERE id = $1`,
+            [commentId]
+        )
+        const userCommentRow = res.rows[0];
+
+        if(!userCommentRow) throw new NotFoundError(`Comment ${commentId} not found`);
+
+        return userCommentRow; 
+    }
+
+
+    async getComments(postId){
+        const res = await db.query(
+            `SELECT c.id, c.content, c.created_at
+            FROM posts p
+            JOIN comments c
+            ON p.id = c.post_id
+            WHERE p.id = $1`,
+            [postId]
+        )
+
+        const userPostCommentsRows = res.rows;
+        const post = await this.getPost(postId)
+        post.comments = userPostCommentsRows;
+        return post.comments;
+    }
+
+    async addComment(postId, content){
+        await db.query(
+            `INSERT INTO comments
+            (user_id, post_id, content)
+            VALUES
+            ($1, $2, $3)
+            RETURNING *`,
+            [this.id, postId, content]
+        )
+
+        return this.getPosts();
+    }
+
+    async editComment(commentId, content){
+        await db.query(
+            `UPDATE comments
+            SET content = $1
+            WHERE id = $2`,
+            [content, commentId]
+        )
+        return this.getPosts();
+    }
+
+    async removeComment(commentId){
+        await db.query(
+            `DELETE FROM comments
+            WHERE id = $1`,
+            [commentId]
+        )
+        return this.getPosts();
+    }
+
+
 }
 
 // DELETE vvvvvvvv
@@ -306,7 +484,7 @@ const test = async () => {
         // const res = await User.get("seven");
     //     const user = await User.login("bob", "1234567");  
     // console.log(await user.permaRemove("bob"));
-    // const user = await User.login("three", "1234567");
+    const user = await User.login("three", "1234567");
     // console.log(await user.update({
     //     status: "yolo",
     //     about: "I like turtles"
@@ -318,6 +496,17 @@ const test = async () => {
     // await user.follow("naruto");
     // await user.follow("naruto");
     // console.log(await User.get("three"))
+    //await user.getPosts();
+    // await user.createPost("Its another post again")
+    // await user.updatePost(15, 'This is an updated post')
+    // await user.removePost(14)
+    // console.log(await user.getPost(15));
+    // console.log(await user.getPostLikes(15));
+    // await user.likePost(15)
+    // console.log(await user.getComments(13))
+    //await user.addComment(13, 'believe it, its suppose to get deleted')
+    // await user.removeComment(17)
+    // await user.editComment(16, 'believe it, its edited')
     // console.log(res);
     // console.log(user)
 }
