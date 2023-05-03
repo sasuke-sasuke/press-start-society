@@ -23,7 +23,8 @@ class User {
         following = [],
         followers = [],
         posts = [],
-        favorite_games = []
+        favorite_games = [],
+        groups = []
     }) 
     {
         this.id = id;
@@ -42,6 +43,7 @@ class User {
         this.followers = followers;
         this.posts = posts;
         this.favorite_games = favorite_games;
+        this.groups = groups;
     }
 
     /** Gets all info related to user */
@@ -62,6 +64,7 @@ class User {
         await user.getFollowing();
         await user.getFollowers();
         await user.getPosts();
+        await user.getGroups();
         
         return user;
     }
@@ -468,6 +471,126 @@ class User {
         return this.getPosts();
     }
 
+    async getGroups(){
+        const res = await db.query(
+            `SELECT id, name, description, avatar, game_id, owner_id
+            FROM groups
+            WHERE owner_id = $1`,
+            [this.id]
+        )
+
+        const userGroupsRows = res.rows;
+        if(!userGroupsRows) throw new NotFoundError(`No groups found`);
+
+        this.groups = userGroupsRows;
+
+        return this;
+    }
+
+    async getGroup(groupId){
+        const res = await db.query(
+            `SELECT id, name, description, avatar, game_id, owner_id
+             FROM groups
+             WHERE id = $1`,
+             [groupId]
+        )
+        const userGroupRow = res.rows[0];
+        if(!userGroupRow) throw new NotFoundError(`Group ${groupId} not found`);
+        return userGroupRow;
+    }
+
+    async createGroup(data){
+        const {name, description, avatar, game_id} = data;
+        await db.query(
+            `INSERT INTO groups
+            (name, description, avatar, game_id, owner_id)
+            VALUES
+            ($1, $2, $3, $4, $5)`,
+            [name, description, avatar, game_id, this.id]
+        )
+
+        return this.getGroups();
+    }
+
+    async updateGroup(groupId, data){
+        const { setCols, values } = sqlForPartialUpdate(
+            data,
+            {
+                name: "name",
+                description: "description",
+                avatar: "avatar",
+                game_id: "game_id",
+                owner_id: "owner_id"
+            });
+
+        const userIdVarIdx = "$" + (values.length + 1);
+
+        const querySql = `UPDATE groups
+                          SET ${setCols}
+                          WHERE owner_id = ${userIdVarIdx}
+                          RETURNING *`;
+
+        const res = await db.query(querySql, [...values, groupId]);
+        const updatedGroupRow = res.rows[0];
+
+        if(!updatedGroupRow) throw new NotFoundError(`Group id: ${groupId} not found`);
+
+        for (const [key, value] of Object.entries(updatedGroupRow)) {
+            this[key] = value;
+        }
+
+        return this.getGroups();
+    }
+
+    async removeGroup(groupId){
+        await db.query(
+            `DELETE FROM groups
+            WHERE id = $1`,
+            [groupId]
+        )
+
+        return this.getGroups();
+    }
+
+    async getGroupUsers(groupId){
+        const res = await db.query(
+            `SELECT g.name, u.id, u.username
+            FROM groups g
+            JOIN group_users gu
+            ON g.id = gu.group_id
+            JOIN users u
+            ON gu.user_id = u.id
+            WHERE g.id = $1`,
+            [groupId]
+        )
+
+        const userGroupUsersRows = res.rows;
+        if(!userGroupUsersRows) throw new NotFoundError(`Group id: ${groupId} not found`);
+
+        return userGroupUsersRows;
+    }
+
+    async addGroupUser(groupId, userId){
+        await db.query(
+            `INSERT INTO group_users
+            (group_id, user_id)
+            VALUES
+            ($1, $2)`,
+            [groupId, userId]
+        )
+
+        return this.getGroupUsers(groupId);
+    }
+
+    async removeGroupUser(groupId, userId){
+        await db.query(
+            `DELETE FROM group_users
+            WHERE group_id = $1 AND user_id = $2`,
+            [groupId, userId]
+        )
+
+        return this.getGroupUsers(groupId);
+    }
 
 }
 
@@ -485,10 +608,10 @@ const test = async () => {
     //     const user = await User.login("bob", "1234567");  
     // console.log(await user.permaRemove("bob"));
     const user = await User.login("three", "1234567");
-    // console.log(await user.update({
-    //     status: "yolo",
-    //     about: "I like turtles"
-    // }))
+    // await user.update({
+    //     status: "MICHEAL!!",
+    //     about: "too sexy for my shorts"
+    // })
     // console.log(await user.getFavGames())
     // await user.addFavGame(7);
     // await user.removeFavGame(7);
@@ -507,7 +630,12 @@ const test = async () => {
     //await user.addComment(13, 'believe it, its suppose to get deleted')
     // await user.removeComment(17)
     // await user.editComment(16, 'believe it, its edited')
+    // await user.updateGroup(1, {name: 'SkyrimsBestFans', description: "Only place for skyrim"})
+    // await user.createGroup({name: 'Da Group', description: "da best group", game_id: 10 })
     // console.log(res);
+    // await user.removeGroup(6);
+    // console.log(await user.getGroupUsers(1));
+    // await user.addGroupUser(1,5)
     // console.log(user)
 }
 
