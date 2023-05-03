@@ -84,7 +84,7 @@ CREATE TABLE groups (
     name VARCHAR(25) UNIQUE,
     description VARCHAR(255),
     avatar TEXT DEFAULT 'groups.png',
-    date_created DATE NOT NULL,
+    date_created DATE NOT NULL DEFAULT NOW(),
     game_id INTEGER NOT NULL
         REFERENCES games(id),
     owner_id INTEGER NOT NULL
@@ -96,5 +96,5 @@ CREATE TABLE group_users (
     group_id INTEGER NOT NULL
         REFERENCES groups(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL
-        REFERENCES users(id)
+        REFERENCES users(id) ON DELETE CASCADE
 );
