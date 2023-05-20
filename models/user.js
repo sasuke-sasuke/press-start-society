@@ -46,6 +46,14 @@ class User {
         this.groups = groups;
     }
 
+    static async getAll() {
+        const res = await db.query(
+            `SELECT *
+            FROM users`
+        )
+        return res.rows;
+    }
+
     /** Gets all info related to user */
     static async get(username) {
         const res = await db.query(
@@ -172,7 +180,7 @@ class User {
             this[key] = value;
         }
 
-        return this;
+        return await User.get(this.username);
     }
 
     async permaRemove() {

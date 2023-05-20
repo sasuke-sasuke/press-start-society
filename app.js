@@ -1,17 +1,25 @@
 const Game = require('./models/game');
-const User = require('./models/user');
 
 const express = require('express');
 const cors = require('cors');
 
 const { NotFoundError } = require('./expressError')
+const {verifyToken} = require('./middleware/auth');
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const favGameRoutes = require('./routes/favGames');
 
 const morgan = require('morgan')
 const app = express();
 
-app.use(cors())
+app.use(cors());
 app.use(express.json());
-app.use(morgan('tiny'))
+app.use(morgan('tiny'));
+app.use(verifyToken);
+
+app.use("/auth", authRoutes);
+app.use("/users", userRoutes);
+app.use("/favGames", favGameRoutes);
 
 /** Handle 404 error -- this matches everything */
 app.use((req, res, next) => {

@@ -19,7 +19,7 @@
         "password": {
             "type": "string",
             "minLength": 3,
-            "maxLength": 15
+            "maxLength": 20
         },
         "first_name": {
             "type": "string",
