@@ -25,7 +25,7 @@ router.post("/:username", ensureCorrectUser, async (req, res, next) => {
 
         await user.addFavGame(+req.body.game_id);
 
-        return res.json(user.favorite_games);
+        return res.status(201).json(user.favorite_games);
     } catch (err) {
         return next(err);
     }
