@@ -30,7 +30,7 @@ function ensureLoggedIn(req, res, next) {
 function ensureCorrectUser(req, res, next) {
     try {
         const user = res.locals.user;
-        if(!(user && (user.username === req.body.username))) throw new UnauthorizedError();
+        if(!(user && (user.username === req.params.username))) throw new UnauthorizedError();
         return next();
     } catch (err) {
         return next(err);
