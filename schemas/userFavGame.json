@@ -1,0 +1,33 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "default": {},
+    "title": "Root Schema",
+    "required": [
+        "user_id",
+        "game_id"
+    ],
+    "properties": {
+        "user_id": {
+            "type": "integer",
+            "default": 0,
+            "title": "The user_id Schema",
+            "examples": [
+                1
+            ]
+        },
+        "game_id": {
+            "type": "integer",
+            "default": 0,
+            "title": "The game_id Schema",
+            "examples": [
+                6
+            ]
+        }
+    },
+    "examples": [{
+        "user_id": 1,
+        "game_id": 6
+    }]
+}
