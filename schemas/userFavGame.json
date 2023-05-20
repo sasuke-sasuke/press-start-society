@@ -5,7 +5,6 @@
     "default": {},
     "title": "Root Schema",
     "required": [
-        "user_id",
         "game_id"
     ],
     "properties": {

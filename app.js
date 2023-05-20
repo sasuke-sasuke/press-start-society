@@ -8,6 +8,7 @@ const {verifyToken} = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const favGameRoutes = require('./routes/favGames');
+const followerRoutes = require('./routes/followers');
 
 const morgan = require('morgan')
 const app = express();
@@ -20,6 +21,7 @@ app.use(verifyToken);
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/favGames", favGameRoutes);
+app.use("/follows", followerRoutes);
 
 /** Handle 404 error -- this matches everything */
 app.use((req, res, next) => {
