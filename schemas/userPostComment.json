@@ -1,0 +1,33 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "default": {},
+    "title": "Root Schema",
+    "required": [
+        "post_id",
+        "content"
+    ],
+    "properties": {
+        "post_id": {
+            "type": "integer",
+            "default": 0,
+            "title": "The post_id Schema",
+            "examples": [
+                2
+            ]
+        },
+        "content": {
+            "type": "string",
+            "default": "",
+            "title": "The content Schema",
+            "examples": [
+                "My PS5 HDMI broke again..."
+            ]
+        }
+    },
+    "examples": [{
+        "post_id": 2,
+        "content": "My PS5 HDMI broke again..."
+    }]
+}

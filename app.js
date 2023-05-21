@@ -10,6 +10,7 @@ const userRoutes = require('./routes/users');
 const favGameRoutes = require('./routes/favGames');
 const followerRoutes = require('./routes/followers');
 const postRoutes = require('./routes/posts');
+const commentRoutes = require('./routes/comments');
 
 const morgan = require('morgan')
 const app = express();
@@ -24,6 +25,7 @@ app.use("/users", userRoutes);
 app.use("/favGames", favGameRoutes);
 app.use("/follows", followerRoutes);
 app.use("/posts", postRoutes);
+app.use("/post/comments", commentRoutes);
 
 /** Handle 404 error -- this matches everything */
 app.use((req, res, next) => {
