@@ -5,7 +5,6 @@
     "default": {},
     "title": "Root Schema",
     "required": [
-        "post_id",
         "content"
     ],
     "properties": {

@@ -34,9 +34,9 @@ router.post("/:username/:postId", ensureCorrectUser, async (req, res, next) => {
         const validator = jsonschema.validate(req.body, userPostCommentSchema);
         if (!validator.valid) throw new BadRequestError();
 
-        await post.addComment(req.body.content);
+        await user.addComment(+req.params.postId, req.body.content);
 
-        return res.status(201).json(post.comments);
+        return res.status(201).json(await user.getComments(+req.params.postId));
     } catch (err) {
         return next(err);
     }
@@ -47,9 +47,9 @@ router.patch("/:username/:postId/:commentId", ensureCorrectUser, async (req, res
         const user = await User.get(req.params.username);
         const post = user.posts.find(p => p.id === +req.params.postId);
 
-        await post.editComment(+req.params.commentId, req.body.content);
+        await user.editComment(+req.params.commentId, req.body.content);
 
-        return res.json(post.comments);
+        return res.json(await user.getComments(+req.params.postId));
     } catch (err) {
         return next(err);
     }
@@ -60,9 +60,9 @@ router.delete("/:username/:postId/:commentId", ensureCorrectUser, async (req, re
         const user = await User.get(req.params.username);
         const post = user.posts.find(p => p.id === +req.params.postId);
 
-        await post.removeComment(req.params.commentId);
+        await user.removeComment(req.params.commentId);
 
-        return res.json(post.comments);
+        return res.json(await user.getComments(+req.params.postId));
     } catch (err) {
         return next(err);
     }
